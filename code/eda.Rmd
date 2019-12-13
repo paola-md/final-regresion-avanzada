@@ -1,0 +1,49 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+instalar <- function(paquete) {
+  if (!require(paquete,character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)) {
+    install.packages(as.character(paquete), dependecies = TRUE, repos = "http://cran.us.r-project.org")
+    library(paquete, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
+  }
+}
+
+paquetes <- c("odbc","readr", "stringr", "dplyr", "tidyverse", "bookdown",
+              "funModeling","magrittr")
+
+lapply(paquetes, instalar)
+
+```
+
+
+```{r}
+library(openxlsx)
+
+data <- read.xlsx("./../data/TARGET_ROTACION.xlsx")
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+describe(data)
+```
+
+
+```{r}
+data_integrity(data)
+```
+
+```{r}
+colnames(data) <- tolower(colnames(data))
+
+ggplot(data, aes(TARGET)) +
+  geom_histogram()
+
+
+```
+
