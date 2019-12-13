@@ -1,0 +1,173 @@
+---
+title: "Proyecto Final"
+subtitle: "Rotación de asesores de venta"
+date: 'Diciembre 2019'
+author:
+- Paola Mejía 
+- Karla Alfaro 
+- Rodrigo Suárez
+- Ana Bertha Coronel 
+output:
+  pdf_document:
+    toc: false
+    toc_depth: 2
+    number_sections: true
+    fig_caption: true
+---
+
+```{r,echo=F,message=F,warning=F,error=F,}
+rm(list=ls())
+paquetes<-c("tidyverse","survival","Hmisc","chron","survminer","lubridate","here","ggridges","ggrepel","xtable","cowplot","magick","grid","gridExtra")
+check_packages<-function(x){
+  sapply(x,function(y){if(!y%in%rownames(installed.packages())) install.packages(y,quiet=T)})
+  sapply(x,require,character.only=T,quietly=T)
+}
+aux<-check_packages(paquetes)
+```
+
+
+```{r, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# directorio y carga de librerías 
+
+setwd("~/MCD/Otoño2019/Regresión Avanzada/Proyecto final/")
+library(R2OpenBUGS)
+library(R2jags)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(openxlsx)
+library(readxl)
+
+prob<-function(x){
+  out<-min(length(x[x>0])/length(x),length(x[x<0])/length(x))
+  out
+}
+
+```
+
+```{r, eval=TRUE, echo=FALSE}
+data <- read.xlsx("TARGET_ROTACION.xlsx")
+colnames(data) <- tolower(colnames(data))
+data$f_alta <- as.Date(data$f_alta, origin="1899-12-30")
+```
+
+#Introducción
+
+## Contexto del problema
+
+La rotación de empleados ... 
+
+La empresa tiene presencia a nivel nacional a través de 174 sucursales. 
+
+Toda vez que un nuevo colaborador entra a la empresa, recibe un curso de inducción para familiarizarse con la misión y visión de la compañía y, dependiendo del área, se les da también una capacitación. En e caso del departamento de ventas, la capacitación tiene una duración de 6 meses y los colaboradores tienen interacción con personal de otras sucursales. 
+
+En algunas ocasiones, una vez terminado el perido de capacitación, el colaborador decide dar por terminada la relación laboral y esto conlleva a un nuevo proceso de reclutamiento e inversión en capacitación. 
+
+La base de datos con la que se trabajará está conformada por `nrow(data)` asesores de ventas de la empresa y las variables se describen a continuación: 
+
++ fecha de alta (F_ALTA): fecha de ingreso a la empresa
+
++ género: género del asesor 
+
++ edad: edad del asesor en años
+
++ sucursal: sucursal u oficina en la que está asignado el asesor
+
++ div: división o región a la que pertence la sucursal. Las divisiones son: Metropolitana, Noreste, Norte, Norte/Sureste y Sur. 
+
++ número de ventas: total de ventas acumuladas en tres meses
+
++ sueldo promedio: pago por las comisiones generadas según el número de ventas
+
++ antigüedad: antiguüedad laboral. La variable se calcula a partir de la fecha de ingreso al Seguro Social
+
++ trabajo previos: cantidad de trabajos previos 
+
++ edo_civil: estado civil del asesor
+
++ experiencia: experiencia en ventas (sin experiencia, 1 año, 2 años, más de 2 años)
+
++ escolaridad: nivel de escolaridad del asesor (secundaria, bachillerato, licenciatura, maestría)
+
++ salario diario anterior: salario anterior del asesor. Para fines de los análisis, la variable se multiplica por un factor=30.4 y se obtiene el salario mensual anterior. 
+
++ rotación o target: el asesor renunció después de terminar la capacitación o no
+
+## Objetivos
+
+Bajo el contexto antes mencionado, el objetivo del modelo es calcular la probabilidad de que un nuevo asesor de ventas renuncie una vez terminada la capacitación. 
+
+De manera particular, se desarrollarán dos modelos: 
+
++ modelo lineal generalizado
+
++ modelo jerárquico
+
+El trabajo se divide en XX secciones: (1) análisis exploratorio de datos en donde se da una breve explicación de las variables así como la representación gráfica de algunas de las variables y relacinoes bivariadas; en la sección *análisis inferencial* se detalla la especificación de los modelos así como los resultados de cada uno de ellos y las variables que resultaron significativas. Finalmente, se presentan las conlcusiones del proyecto. 
+
+#Análisis Exploratorio de Datos
+
+```{r, eval=FALSE, echo=FALSE}
+
+```
+
+#Análisis inferencial 
+
+Como se menciona en la sección del análisis exploratorio de los datos, resulta de interés conocer las variables que tienen un efecto en la baja voluntaria de los asesores de ventas. 
+
+Si consideramos la baja voluntaria del asesor como \{1=renuncia, 0=permanece\}, podemos decir que la variable de interés sigue una distribución Bernoulli. Si quisiéramos considerar a la variable como la tasa de rotación, podríamos pensar en una distribución beta para la variable de interés. En este último caso, necesitaríamos calcular el número de bajas y el total de asesores expuestos bajo algún criterio. 
+
+Para considerar los datos de manera desagregada, definimos a la variable $Y_i|\pi_i\sim Be(\pi_i)$; es decir,
+
+
+\begin{equation}
+  Y_i|\pi_i =
+    \begin{cases}
+      1 & \text{si el asesor renuncia después de la capacitación}\\
+      0 & \text{si el asesor permance después de la capacitación}\\
+\end{cases}       
+\end{equation}
+
+Consideraramos las siguientes ligas:
+
++ liga logística: $$\pi_i=\frac{e^{X'_i}\beta}{1+e^{X'_i}\beta}$$
+
++ liga normal: $$\pi_i=\phi(X'_i\beta)$$
+
++ liga log log complementaria: $$\pi_i=1-e^{-e^{X'_i\beta}}$$
+
+En cualquiera de los casos anteriores, definimos $\eta_i=X'_i\beta$
+
+$$\eta_i=\alpha+\beta_1*edad_i+\beta_2*ventas_i + \beta_3*sueldo_i + \beta_4*incremento_i + \beta_5*tprevios+\beta_6*antiguedad + \gamma_{z1i} + \delta_{z2i} + \nu_{z3i} + \nu1_{z4i}+\nu2_{z5i}+\nu3_{z6i}+\nu3_{z7i}+\nu5_{z8i}+ \nu6_{z5i*z7i}$$
+en donde
+
++ $z_{1i}$ género del asesor: $z_{1i} \in \{1,2\}$
+
++ $z_{2i}$  división: $z_{2i} \in \{1,2\}$
+
++ $z_{3i}$ experiencia: $z_{3i} \in \{1,2,3,4\}$
+
++ $z_{4i}$ escolaridad: $z_{4i} \in \{1,2,3,4\}$
+
++ $z_{5i}$ estado civil: $z_{5i} \in \{1,2\}$
+
++ $z_{6i}$ dependientes: $z_{6i} \in \{1,...,7\}$
+
++ $z_{7i}$ mes: $z_{7i} \in \{1,...,12\}$
+
+Al tener variables explicativas categóricas, impondremos restricciones de estimabilidad sobre algunos parámetros: 
+
+$$\sum_{i=1}^{2} \gamma_i = \sum_{i=1}^{2} \delta_i = \sum_{i=1}^{4} \nu_i = \sum_{i=1}^{4} \nu1_i = \sum_{i=1}^{2}  \nu2_i = \sum_{i=1}^{7}  \nu3_i = \sum_{i=1}^{6} \nu4_i =\sum_{i=1}^{2} \nu5_i= \sum_{i=1}^{2}\sum_{j=1}^{6}\nu6_{ij}=0 $$
+
+
+
+
+
+#Conclusiones
+
+#Bibliografía
+
+#Anexo
+
+En la siguiente sección se muestra el código utilizado tanto para realizar el análisis exploratorio de los datos como para el desarrollo de los modelos. 
+
