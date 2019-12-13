@@ -22,7 +22,7 @@ lapply(paquetes, instalar)
 ```{r}
 library(openxlsx)
 
-data <- read.xlsx("./../data/TARGET_ROTACION.xlsx")
+data <- read.xlsx("./../data/Target_rotacionV2.xlsx")
 ```
 
 ```{r}
@@ -39,11 +39,114 @@ data_integrity(data)
 ```
 
 ```{r}
+
 colnames(data) <- tolower(colnames(data))
+
+data <- data %>% mutate(
+  grupo_edad=0,
+  grupo_edad = case_when(
+    edad < 28 ~  1,
+    edad > 47 ~ 3,
+    TRUE ~ 2
+  )
+)
+
+data <- data %>% mutate(
+  grupo_sueldo=0,
+  grupo_sueldo = case_when(
+    sueldo_prom < 2000 ~  1,
+    sueldo_prom  > 10000 ~ 3,
+    TRUE ~ 2
+  )
+)
+
+ggplot(data, aes(group = factor(rotacion), fill = factor(rotacion), grupo_edad)) + 
+  geom_bar() 
+
+ggplot(data, aes(group = factor(rotacion), fill = factor(rotacion),grupo_sueldo)) + 
+  geom_bar() +
+  facet_grid(~grupo_edad)
+
+ggplot(data, aes(x = factor(rotacion), color = factor(rotacion),y = edad)) + 
+ geom_boxplot()
+
+  facet_grid(~grupo_edad)
+
+
+
+data <- data %>% mutate(
+  rotacion = ifelse(target =="C", 1, 2)
+)
+
+colnames(data)
+```
+
+
+```{r}
+colnames(data) <- tolower(colnames(data))
+
+data %>% group_by(target) %>%
+  summarise (
+    cuenta = n()
+  )
 
 ggplot(data, aes(TARGET)) +
   geom_histogram()
 
 
 ```
+
+
+# Modelo simple
+
+```{r}
+data<-list("n"=n,"y"=y_standard,"anestesia"= anestesia,
+           "complica"=complica,"estado_c"=estado_c,
+            "hospital"=hospital, "forma_nac"=forma_nac,
+           "ind_ces"=ind_ces,"monitoreo"=monitoreo,
+            "edad"=edad,"peso_madre"=peso_madre,
+            "peso_prod"=peso_prod,"escolaridad"=escolaridad)
+
+#-Definiendo inits-
+inits<-function(){list(alpha=0,
+                       b_an=rep(0,2),b_com=rep(0,2),
+                       b_ec = rep(0,4), b_fn = rep(0,2),
+                       b_ho = rep(0,7), b_ic = rep(0,2), 
+                       b_mon = rep(0,2), b_edad = 0, 
+                       b_pm = 0, b_pp = 0, b_esc = rep(0,4))}
+
+#-Seleccionando parametros a monitorear-
+parameters_complete<-c("alpha.est", 
+              "b_an.est", "b_com.est", "b_ec.est", "b_ho.est",
+              "b_ic.est", "b_mon.est", "b_edad", "b_pm","b_pp",
+              "b_esc.est", "b_fn.est")
+
+
+mod1.sim<-jags(data,inits,parameters_complete,model.file="prueba.txt",
+              n.iter=8000,n.chains=2,n.burnin=2000,n.thin=2)
+traceplot(mod1.sim)
+out.dic<-mod1.sim$BUGSoutput$DIC
+print(out.dic)
+```
+
+# Probar con las 4 ligas
+
+
+
+# Modelo con interacciones
+
+
+# Modelo con bin
+
+# Modelo jerarquico
+Modelo jerarquico
+* Region
+* Genero
+* Con el tiempo, como los mineros
+
+
+Interacción entre mes y año
+
+
+
 
