@@ -20,9 +20,9 @@ lapply(paquetes, instalar)
 
 
 ```{r}
-library(openxlsx)
+library(readr)
 
-data <- read.xlsx("./../data/Target_rotacionV2.xlsx")
+data <- read_csv("./../data/clean_casi_rotacion.csv")
 ```
 
 ```{r}
@@ -51,6 +51,8 @@ data <- data %>% mutate(
   )
 )
 
+data$rotacion <- data$target
+
 data <- data %>% mutate(
   grupo_sueldo=0,
   grupo_sueldo = case_when(
@@ -70,15 +72,7 @@ ggplot(data, aes(group = factor(rotacion), fill = factor(rotacion),grupo_sueldo)
 ggplot(data, aes(x = factor(rotacion), color = factor(rotacion),y = edad)) + 
  geom_boxplot()
 
-  facet_grid(~grupo_edad)
 
-
-
-data <- data %>% mutate(
-  rotacion = ifelse(target =="C", 1, 2)
-)
-
-colnames(data)
 ```
 
 
