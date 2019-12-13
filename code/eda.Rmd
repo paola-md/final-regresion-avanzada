@@ -77,16 +77,34 @@ ggplot(data, aes(x = factor(rotacion), color = factor(rotacion),y = edad)) +
 
 
 ```{r}
-colnames(data) <- tolower(colnames(data))
+colnames(datos)
+```
 
-data %>% group_by(target) %>%
-  summarise (
-    cuenta = n()
-  )
 
-ggplot(data, aes(TARGET)) +
-  geom_histogram()
+```{r}
+datos <- data
+datos<-as.matrix(datos)
 
+n<-dim(datos)[1]
+y<- datos$rotacion
+y_standard <- y - 1
+
+#Variables explicativas
+#Categoricas
+anestesia <- datos$Anestesia
+complica <- datos$Complica
+estado_c <- datos$Estado_civil
+forma_nac <- datos$Forma_nac
+hospital <- datos$Hospital
+ind_ces <- datos$riesgo
+monitoreo <- datos$Monitoreo
+escolaridad <- datos$Escolaridad 
+
+#Continuas
+edad <- as.vector(scale(data$edad))
+num_ventas <- as.vector(scale(datos$num_ventas))
+num_trabajos_previos <- as.vector(scale(datos$num_trabajos_previos))
+sueldo_prom <- as.vector(scale(datos$sueldo_prom)) 
 
 ```
 
