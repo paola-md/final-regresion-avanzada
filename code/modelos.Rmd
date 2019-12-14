@@ -62,57 +62,67 @@ library(lubridate)
 n<-dim(datos)[1]
 y<- datos$rotacion
 
+data$rotacion <- case_when(data$rotacion==0 ~1, 
+                           TRUE~0)
 #Variables explicativas
 #Categoricas
+datos$experiencia[is.na(datos$experiencia)] <- 0
+datos$experiencia <- datos$experiencia +1
 experiencia <- datos$experiencia
-experiencia[is.na(experiencia)] <- 0
-experiencia <- experiencia +1
 
+datos$genero <- factor(datos$genero)
+datos$genero <- droplevels(datos$genero)
+datos$genero <- as.integer(datos$genero)
 genero <- datos$genero
-genero <- factor(datos$genero)
-genero <- droplevels(genero)
-genero <- as.integer(genero)
 
-
+datos$dependientes[is.na(datos$dependientes)] <- 0
+datos$dependientes <- datos$dependientes +1
 dependientes <- datos$dependientes
-dependientes[is.na(dependientes)] <- 0
-dependientes <- dependientes +1
 
+datos$div[is.na(datos$div)] <- 0
+datos$div <- datos$div +1
 div <- datos$div #region
-div[is.na(div)] <- 0
-div <- div +1
 
+datos$edo_civil[is.na(datos$edo_civil)] <- 0
+datos$edo_civil <- datos$edo_civil +1
 edo_civil <- datos$edo_civil
-edo_civil[is.na(edo_civil)] <- 0
-edo_civil <- edo_civil +1
 
-escolaridad <- datos$escolaridad 
-escolaridad[is.na(escolaridad)] <- 0
-escolaridad<- escolaridad +1
+datos$escolaridad[is.na(datos$escolaridad)] <- 0
+datos$escolaridad<- datos$escolaridad +1
+escolaridad <- datos$escolaridad
 
-mes <- as.numeric(format(as.Date(datos$f_alta,format = "%d-%b-%y"), "%m"))
+datos$mes <- as.numeric(format(as.Date(datos$f_alta,format = "%d-%b-%y"), "%m"))
+mes <- datos$mes
 
 #Continuas
-edad <- as.vector(scale(datos$edad))
-edad[is.na(edad)] <- 0
+datos$edad<- as.vector(scale(datos$edad))
+datos$edad[is.na(datos$edad)] <- median(datos$edad)
+edad <- datos$edad
 
-num_ventas <- as.vector(scale(datos$num_ventas))
-num_ventas[is.na(num_ventas)] <- 0
+datos$num_ventas <- as.vector(scale(datos$num_ventas))
+datos$num_ventas[is.na(datos$num_ventas)] <- 0
+num_ventas <- datos$num_ventas
 
-num_trabajos_previos <- as.vector(scale(datos$num_trabajos_previos))
-num_trabajos_previos[is.na(num_trabajos_previos)] <- 0
+datos$num_trabajos_previos <- as.vector(scale(datos$num_trabajos_previos))
+datos$num_trabajos_previos[is.na(datos$num_trabajos_previos)] <- 0
+num_trabajos_previos <- datos$num_trabajos_previos
 
-sueldo_prom <- as.vector(scale(datos$sueldo_prom)) 
-sueldo_prom[is.na(sueldo_prom)] <- 0
 
-salario_diario_ant <-  as.vector(scale(datos$salario_diario_ant)) 
-salario_diario_ant[is.na(salario_diario_ant)] <- 0
+datos$sueldo_prom <- as.vector(scale(datos$sueldo_prom)) 
+datos$sueldo_prom[is.na(datos$sueldo_prom)] <- 0
+sueldo_prom <- datos$sueldo_prom
 
-antiguedad<-  as.vector(scale(datos$antiguedad))
-antiguedad[is.na(antiguedad)] <- 0
+datos$salario_diario_ant <-  as.vector(scale(datos$salario_diario_ant)) 
+datos$salario_diario_ant[is.na(datos$salario_diario_ant)] <- 0
+salario_diario_ant <- datos$salario_diario_ant
 
-incremento<-  as.vector(scale(datos$incremento))
-incremento[is.na(incremento)] <- 0
+datos$antiguedad<-  as.vector(scale(datos$antiguedad))
+datos$antiguedad[is.na(datos$antiguedad)] <- 0
+antiguedad <- datos$antiguedad
+
+datos$incremento<-  as.vector(scale(datos$incremento))
+datos$incremento[is.na(datos$incremento)] <- 0
+incremento <- datos$incremento
 
 datos <- datos %>% mutate(
   grupo_edad=0,
@@ -132,6 +142,8 @@ datos <- datos %>% mutate(
   )
 )
 
+write.csv(datos, "./../data/datos.csv")
+
 
 ```
 
@@ -150,14 +162,6 @@ data<-list("n"=n,"y"=y,"experiencia"= experiencia,
            "div"=div)
 
 #-Definiendo inits-
-inits_sin_miss<-function(){list(alpha=0,
-                       b_exp=rep(0,3),b_gen=rep(0,2),
-                       b_dep = rep(0,4), b_edo_c = rep(0,3),
-                       b_esc = rep(0,4), b_mes = rep(0,12), 
-                       b_num_v = 0, b_edad = 0, b_num_t =0,
-                       b_suel = 0, b_suel_ant = 0, b_ant = 0, 
-                       b_inc = 0, b_div = rep(0,3))}
-
 inits<-function(){list(alpha=0,
                        b_exp=rep(0,3),b_gen=rep(0,2),
                        b_dep = rep(0,4), b_edo_c = rep(0,3),
@@ -185,7 +189,7 @@ Corremos regresion frequentista
 #-Corrida de codigo-
 #JAGS
 mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/logit.txt",
-              n.iter=5000,n.chains=2,n.burnin=1000,n.thin=1)
+              n.iter=100,n.chains=2,n.burnin=10,n.thin=1)
 out.dic<-mod1.sim$BUGSoutput$DIC
 print(out.dic)
 
@@ -396,8 +400,7 @@ ggplot(datos, aes(x=factor(genero), fill=factor(escolaridad))) +
 data<-list("n"=n,"y"=y,"experiencia"= experiencia,
            "genero"=genero,"dependientes"=dependientes,
            "edo_civil"=edo_civil,"escolaridad"=escolaridad,
-           "mes"=mes,
-           "num_ventas"=num_ventas,
+           "mes"=mes, "num_ventas"=num_ventas,
             "edad"=edad,"num_trabajos"=num_trabajos_previos,
             "sueldo_prom"=sueldo_prom, "sueldo_ant" =salario_diario_ant,
            "antiguedad" =antiguedad, "incremento"=incremento,
