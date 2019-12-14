@@ -86,10 +86,11 @@ parameters_complete<-c("alpha.est",
 #-Corrida de codigo-
 #JAGS
 mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/logit.txt",
-              n.iter=100,n.chains=2,n.burnin=10,n.thin=1)
+              n.iter=5000,n.chains=2,n.burnin=1000,n.thin=1)
 out.dic<-mod1.sim$BUGSoutput$DIC
 print(out.dic)
-
+out.sum<-mod1.sim$BUGSoutput$summary
+write.csv(out.sum, "./../results/results.csv")
 
 mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/probit.txt",
               n.iter=5000,n.chains=2,n.burnin=1000,n.thin=1)
@@ -104,7 +105,7 @@ print(out.dic)
 traceplot(mod1.sim)
 ```
 
-
+475.2922
 ```{r}
 #JAGS
 out<-mod1.sim$BUGSoutput$sims.list
@@ -199,7 +200,7 @@ title("Efecto: Incremento")
 
 
 out.est<-out.sum[grep("b_exp",rownames(out.sum)),]
-k<-3
+k<-2
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
@@ -218,7 +219,7 @@ title("Efecto: Genero")
 
 
 out.est<-out.sum[grep("b_dep",rownames(out.sum)),]
-k<-4
+k<-3
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
@@ -228,7 +229,7 @@ title("Efecto: Dependientes")
 
 
 out.est<-out.sum[grep("b_edo_c",rownames(out.sum)),]
-k<-3
+k<-2
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
@@ -237,7 +238,7 @@ abline(h=0,col="grey70")
 title("Efecto: Estado Civil")
 
 out.est<-out.sum[grep("b_esc",rownames(out.sum)),]
-k<-4
+k<-3
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
@@ -246,7 +247,7 @@ abline(h=0,col="grey70")
 title("Efecto: Escolaridad")
 
 out.est<-out.sum[grep("b_mes",rownames(out.sum)),]
-k<-12
+k<-6
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
@@ -256,7 +257,7 @@ title("Efecto: Mes")
 
 
 out.est<-out.sum[grep("b_div",rownames(out.sum)),]
-k<-3
+k<-2
 ymin<-min(out.est[,c(1,3,7)])
 ymax<-max(out.est[,c(1,3,7)])
 plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
