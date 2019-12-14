@@ -22,21 +22,26 @@ prob<-function(x){
   out
 }
 
+
+
 ```
 
 
 ```{r}
 
-datos <- read_csv("./../data/datos.csv")
+datos <- read_csv("./../data/data.csv")
+
+datos <- datos %>% filter(mes >6)
 n<-dim(datos)[1]
 
-y <- datos$y
+y <- datos$rotacion
 experiencia <- datos$experiencia
-genero <- datos$genero
+genero <- datos$genero +1 
 dependientes <- datos$dependientes
 edo_civil <- datos$edo_civil
 escolaridad <- datos$escolaridad
-mes <- datos$mes
+mes <- datos$mes - 6
+edad <- datos$edad
 num_ventas <- datos$num_ventas
 num_trabajos_previos <- datos$num_trabajos_previos
 sueldo_prom <- datos$sueldo_prom
@@ -59,12 +64,12 @@ data<-list("n"=n,"y"=y,"experiencia"= experiencia,
 
 #-Definiendo inits-
 inits<-function(){list(alpha=0,
-                       b_exp=rep(0,3),b_gen=rep(0,2),
-                       b_dep = rep(0,4), b_edo_c = rep(0,3),
-                       b_esc = rep(0,4), b_mes = rep(0,12), 
+                       b_exp=rep(0,2),b_gen=rep(0,2),
+                       b_dep = rep(0,3), b_edo_c = rep(0,2),
+                       b_esc = rep(0, 3), b_mes = rep(0,6), 
                        b_num_v = 0, b_edad = 0, b_num_t =0,
                        b_suel = 0, b_suel_ant = 0, b_ant = 0, 
-                       b_inc = 0, b_div = rep(0,3))}
+                       b_inc = 0, b_div = rep(0,2))}
 
 #-Seleccionando parametros a monitorear-
 parameters_complete<-c("alpha.est", 
@@ -75,11 +80,7 @@ parameters_complete<-c("alpha.est",
 
 ```
 
-Corremos regresion frequentista
-```{r}
- mle <- glm(y~edad+num_ventas+antiguedad+sueldo_prom+num_trabajos_previos+genero ,family="binomial")
-  summary(mle)
-```
+
 
 ```{r}
 #-Corrida de codigo-
@@ -88,6 +89,7 @@ mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/logit.txt"
               n.iter=100,n.chains=2,n.burnin=10,n.thin=1)
 out.dic<-mod1.sim$BUGSoutput$DIC
 print(out.dic)
+
 
 mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/probit.txt",
               n.iter=5000,n.chains=2,n.burnin=1000,n.thin=1)
@@ -98,6 +100,8 @@ mod1.sim<-jags(data,inits,parameters_complete,model.file="./../models/cloglog.tx
               n.iter=5000,n.chains=2,n.burnin=1000,n.thin=1)
 out.dic<-mod1.sim$BUGSoutput$DIC
 print(out.dic)
+
+traceplot(mod1.sim)
 ```
 
 

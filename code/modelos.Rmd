@@ -142,6 +142,7 @@ datos <- datos %>% mutate(
   )
 )
 
+datos <- datos %>% select(-key, -sucursal, -antigüedad, -f_alta)
 write.csv(datos, "./../data/datos.csv")
 
 
@@ -364,6 +365,11 @@ segments(1:k,out.est[,3],1:k,out.est[,7])
 abline(h=0,col="grey70")
 title("Efecto: Region")
 
+```
+
+
+```{r}
+datos %>% 
 ```
 
 
