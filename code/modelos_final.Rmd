@@ -96,13 +96,36 @@ print(out.dic3) #
 
 #### MODELO CON INTERACCIONES
 
+
+datos <- datos %>% mutate(
+  grupo_edad=0,
+  grupo_edad = case_when(
+    edad < 30 ~  1,
+    edad > 50 ~ 3,
+    TRUE ~ 2
+  )
+)
+grupo_edad <- datos$grupo_edad
+
+datos <- datos %>% mutate(
+  grupo_sueldo=0,
+  grupo_sueldo = case_when(
+    sueldo_prom < 2000 ~  1,
+    sueldo_prom  > 10000 ~ 3,
+    TRUE ~ 2
+  )
+)
+
+grupo_sueldo <- datos$grupo_sueldo
+
+
 #-Definiendo datos-
 data_2<-list("n"=n,"y"=y,"experiencia"= experiencia,
            "genero"=genero,"dependientes"=dependientes,
            "edo_civil"=edo_civil,"escolaridad"=escolaridad,
            "mes"=mes,"num_ventas"=num_ventas,
-            "edad"=edad,"num_trabajos"= num_trabajos_previos,
-            "sueldo_prom"=sueldo_prom, "sueldo_ant" =salario_diario_ant,
+            "edad"=grupo_edad,"num_trabajos"= num_trabajos_previos,
+            "sueldo_prom"=grupo_sueldo, "sueldo_ant" =salario_diario_ant,
            "antiguedad" =antiguedad, "incremento"=incremento, "div"=div)
 
 #-Definiendo inits-
@@ -110,37 +133,74 @@ inits_2<-function(){list(alpha=0,
                        b_exp=rep(0,3),b_gen=rep(0,2),
                        b_dep = rep(0,3), b_edo_c = rep(0,2),
                        b_esc = rep(0, 3), b_mes = rep(0,6), 
-                       b_num_v = 0, b_edad = 0, b_num_t =0,
-                       b_suel = 0, b_suel_ant = 0, b_ant = 0, 
-                       b_inc = 0, b_div = rep(0,2))}
+                       b_num_v = 0, b_edad = rep(0,3), b_num_t =0,
+                       b_suel = rep(0,3), b_suel_ant = 0, b_ant = 0, 
+                       b_inc = 0, b_div = rep(0,2), b_edad_suel = matrix(0, 3, 3))}
 
 #-Seleccionando parametros a monitorear-
 parameters_2<-c("alpha.est", 
               "b_exp.est", "b_gen.est", "b_dep.est", "b_edo_c.est", "b_esc.est",
-              "b_mes.est", "b_num_v", "b_edad", "b_num_t","b_suel",
-              "b_suel_ant", "b_ant", "b_inc", "b_div.est")
+              "b_mes.est", "b_num_v", "b_edad.est", "b_num_t","b_suel.est",
+              "b_suel_ant", "b_ant", "b_inc", "b_div.est", "b_edad_suel.est")
 
 mod21.sim<-jags(data_2,inits_2,parameters_2,model.file="./../models/logit_int.txt",
-              n.iter=50000,n.chains=2,n.burnin=5000,n.thin=1)
+              n.iter=1000,n.chains=2,n.burnin=300,n.thin=1)
 out.dic21<-mod21.sim$BUGSoutput$DIC
 print(out.dic21) #¡
 out.sum21<-mod21.sim$BUGSoutput$summary
-print(out.sum21)
 write.csv(out.sum21,"./../results/logit_int.csv")
 
 mod22.sim<-jags(data_2,inits_2,parameters_2,model.file="./../models/probit_int.txt",
-              n.iter=50000,n.chains=2,n.burnin=5000,n.thin=1)
+              n.iter=1000,n.chains=2,n.burnin=300,n.thin=1)
 out.dic22<-mod22.sim$BUGSoutput$DIC
 print(out.dic22) #
+out.sum22<-mod22.sim$BUGSoutput$summary
+write.csv(out.sum22,"./../results/probit_int.csv")
 
 mod23.sim<-jags(data_2,inits_2,parameters_2,model.file="./../models/cloglog_int.txt",
-              n.iter=50000,n.chains=2,n.burnin=5000,n.thin=1)
+              n.iter=1000,n.chains=2,n.burnin=300,n.thin=1)
 out.dic23<-mod23.sim$BUGSoutput$DIC
 print(out.dic23) #
+out.sum23<-mod23.sim$BUGSoutput$summary
+write.csv(out.sum23,"./../results/cloglog_int.csv")
 ```
 
 
-#### LO DE PAO
+#### INTERACCIONES
+
+```{r}
+ggplot(datos, aes(x=factor(grupo_edad), fill=factor(grupo_sueldo))) +
+  geom_bar(position="stack")+ 
+  facet_grid(~rotacion)
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          axis.title = element_text(size=15), axis.text =  element_text(size=9), 
+          axis.text.x = element_text(angle=0))
+```
+
+
+```{r}
+out.sum <- out.sum23
+out.est<-out.sum[grep("b_edad.est",rownames(out.sum)),]
+k<-3
+ymin<-min(out.est[,c(1,3,7)])
+ymax<-max(out.est[,c(1,3,7)])
+plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
+segments(1:k,out.est[,3],1:k,out.est[,7])
+abline(h=0,col="grey70")
+title("Efecto: Edad")
+
+
+out.est<-out.sum[grep("b_suel.est",rownames(out.sum)),]
+k<-3
+ymin<-min(out.est[,c(1,3,7)])
+ymax<-max(out.est[,c(1,3,7)])
+plot(1:k,out.est[,1],xlab="categoria",ylab="",ylim=c(ymin,ymax))
+segments(1:k,out.est[,3],1:k,out.est[,7])
+abline(h=0,col="grey70")
+title("Efecto: Sueldo")
+```
+
 
 ```{r}
 out.sum<-mod1.sim$BUGSoutput$summary
@@ -326,7 +386,7 @@ corrplot(res, type = "upper", order = "hclust",
 
 
 ```{r}
-ggplot(datos, aes(x=factor(genero), fill=factor(escolaridad))) +
+ggplot(datos, aes(x=factor(grupo_edad), fill=factor(escolaridad))) +
   geom_bar(position="stack")+ 
   facet_grid(~rotacion)
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -338,47 +398,7 @@ ggplot(datos, aes(x=factor(genero), fill=factor(escolaridad))) +
 
 
 
-```{r}
-#-Definiendo datos-
-data<-list("n"=n,"y"=y,"experiencia"= experiencia,
-           "genero"=genero,"dependientes"=dependientes,
-           "edo_civil"=edo_civil,"escolaridad"=escolaridad,
-           "mes"=mes, "num_ventas"=num_ventas,
-            "edad"=edad,"num_trabajos"=num_trabajos_previos,
-            "sueldo_prom"=sueldo_prom, "sueldo_ant" =salario_diario_ant,
-           "antiguedad" =antiguedad, "incremento"=incremento,
-           "div"=div)
 
-#-Definiendo inits-
-inits_sin_miss<-function(){list(alpha=0,
-                       b_exp=rep(0,3),b_gen=rep(0,2),
-                       b_dep = rep(0,4), b_edo_c = rep(0,3),
-                       b_esc = rep(0,4), b_mes = rep(0,12), 
-                       b_num_v = 0, b_edad = 0, b_num_t =0,
-                       b_suel = 0, b_suel_ant = 0, b_ant = 0, 
-                       b_inc = 0, b_div = rep(0,3))}
-
-inits<-function(){list(alpha=0,
-                       b_exp=rep(0,3),b_gen=rep(0,2),
-                       b_dep = rep(0,4), b_edo_c = rep(0,3),
-                       b_esc = rep(0,4), b_mes = rep(0,12), 
-                       b_num_v = 0, b_edad = 0, b_num_t =0,
-                       b_suel = 0, b_suel_ant = 0, b_ant = 0, 
-                       b_inc = 0, b_div = rep(0,3))}
-
-#-Seleccionando parametros a monitorear-
-parameters_complete<-c("alpha.est", 
-              "b_exp.est", "b_gen.est", "b_dep.est", "b_edo_c.est", "b_esc.est",
-              "b_mes.est", "b_num_v", "b_edad", "b_num_t","b_suel",
-              "b_suel_ant", "b_ant", "b_inc", "b_div.est")
-
-
-mod1.sim<-jags(data,inits,parameters_complete,model.file="Ex_cloglog_int.txt",
-              n.iter=1000,n.chains=2,n.burnin=100,n.thin=1)
-out.dic<-mod1.sim$BUGSoutput$DIC
-print(out.dic)
-
-```
 
 Comprobamos que la interacción estuvo bien implementada
 
@@ -416,12 +436,6 @@ plot(1:k,out.est[,1],xlab="",ylab="",ylim=c(ymin,ymax))
 segments(1:k,out.est[,3],1:k,out.est[,7])
 abline(h=0,col="grey70")
 title("Efecto: Forma Nacimiento Vaginal con y sin anestesia")
-
-```
-
-La probabilidad de sobrevivir parece más alta pero sigue sin ser significativa. Parece que mete ruido en los datos en vez de dar información.
-
-```{r}
 
 ```
 
