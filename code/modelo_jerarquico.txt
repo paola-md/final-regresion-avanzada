@@ -1,0 +1,25 @@
+model
+{
+for (i in 1:n) {
+y[i] ~ dbern(p[i])
+mu[i] <- p[i]
+eta[i] <- alpha[i] + beta1*mes[i] + beta2*genero[i]+ beta3*num_ventas[i] 
+p[i] <- exp(eta[i])/(1+exp(eta[i]))
+}
+  
+# Priors
+
+beta1 ~ dnorm(0, 0.001)
+beta2 ~ dnorm(0, 0.001)
+beta3 ~ dnorm(0, 0.001)
+
+for (j in 1:J) { alpha[j] ~ dnorm(a, b) }
+a~ dnorm(0, 0.001)
+b ~ dgamma(0.001, 0.001)
+
+# Prediction1
+for (i in 1:n) {yf1[i] ~ dbern(p[i])}
+
+eta <- theta
+
+}
