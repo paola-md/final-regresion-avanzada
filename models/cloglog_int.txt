@@ -1,0 +1,54 @@
+model
+{
+#Likelihood
+for (i in 1:n) {
+	y[i] ~ dbin(p[i],1)
+	cloglog(p[i])<-alpha + b_edad_suel[edad[i],sueldo_prom[i]] + b_div[div[i]] + b_exp[experiencia[i]]+b_gen[genero[i]]+b_dep[dependientes[i]]+b_edo_c[edo_civil[i]]+ b_esc[escolaridad[i]]+b_mes[mes[i]]+ b_num_v*num_ventas[i]+ b_edad[edad[i]] +b_num_t*num_trabajos[i] + b_suel[sueldo_prom[i]] + b_suel_ant*sueldo_ant[i] + b_ant*antiguedad[i] + b_inc*incremento[i] 
+}
+
+
+#Priors
+alpha ~ dnorm(0,0.001)
+b_num_v ~ dnorm(0,0.001)
+b_num_t ~ dnorm(0,0.001)
+b_suel_ant ~ dnorm(0,0.001)
+b_ant ~ dnorm(0,0.001)
+b_inc ~ dnorm(0,0.001)
+
+for (i in 1:3) {b_suel[i] ~ dnorm(0,0.01)}
+for (i in 1:3) {b_edad[i] ~ dnorm(0,0.01)}
+ 
+for (i in 1:3) {b_exp[i] ~ dnorm(0,0.01)}
+for (i in 1:2) {b_gen[i] ~ dnorm(0,0.01)}
+for (i in 1:3) {b_dep[i] ~ dnorm(0,0.01)}
+for (i in 1:2) {b_edo_c[i] ~ dnorm(0,0.01)}
+for (i in 1:3) {b_esc[i] ~ dnorm(0,0.01)}
+for (i in 1:6) {b_mes[i] ~ dnorm(0,0.01)}
+for (i in 1:2) {b_div[i] ~ dnorm(0,0.01)}
+
+for (i in 1:3) { for (j in 1:3) {b_edad_suel[i,j] ~ dnorm(0,0.01)}} 
+
+#Estimability constraints
+alpha.est <- alpha +  mean(b_edad_suel[,])+mean(b_exp[])+mean(b_gen[])+mean(b_dep[])+mean(b_edo_c[])+mean(b_esc[])+mean(b_mes[])+mean(b_esc[])+mean(b_div[])+mean(b_num_v[])+mean(b_edad[]) +mean(b_num_t[])+mean(b_suel[])+mean(b_suel_ant[])+mean(b_ant[])+mean(b_inc[])
+
+for (i in 1:3) {b_exp.est[i] <- b_exp[i] - mean(b_exp[])}
+for (i in 1:3) {b_dep.est[i] <- b_dep[i] - mean(b_dep[])}
+for (i in 1:2) {b_edo_c.est[i] <- b_edo_c[i] - mean(b_edo_c[])}
+for (i in 1:3) {b_esc.est[i] <- b_esc[i] - mean(b_esc[])}
+for (i in 1:6) {b_mes.est[i] <- b_mes[i] - mean(b_mes[])}
+
+for (i in 1:2) {b_gen.est[i] <- b_gen[i] - mean(b_gen[]) }
+for (i in 1:2) {b_div.est[i] <- b_div[i] - mean(b_div[]) }
+
+
+for (i in 1:3) {b_edad.est[i] <- b_edad[i] - mean(b_edad[])+ mean(b_edad_suel[i,])- mean(b_edad_suel[,])  }
+for (i in 1:3) {b_suel.est[i]<- b_suel[i] - mean(b_suel[])+ mean(b_edad_suel[,i])- mean(b_edad_suel[,]) }
+
+for (i in 1:3) { for (j in 1:3) {b_edad_suel.est[i,j] <-  b_edad_suel[i,j] - mean(b_edad_suel[i,]) - mean(b_edad_suel[,j]) +  mean(b_edad_suel[,]) }}
+
+#Predictive
+for (i in 1:n) {
+	yf[i] ~ dbin(p[i],1)
+
+}
+}
