@@ -13,7 +13,7 @@ inits<-function(){list(beta1=0, beta2=0, beta3=0, yf1=rep(1,n), alpha=matrix(rep
 
 parameters <- c("alpha", "beta1", "beta2", "beta3", "yf1", "eta")                   
 
-mod1.sim<- bugs(data,inits,parameters,model.file="modelo_final.txt",
+mod1.sim<- bugs(data,inits,parameters,model.file="modelo_jerarquico.txt",
                 n.iter=500,n.chains=2,n.burnin=30,n.thin=1, debug=TRUE)
 
 
