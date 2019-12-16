@@ -1,0 +1,157 @@
+---
+title: "Untitled"
+author: "Ana B. Coronel"
+date: "15 de diciembre de 2019"
+output: pdf_document
+---
+
+```{r eval=TRUE, echo=FALSE}
+prob<-function(x){
+  out<-min(length(x[x>0])/length(x),length(x[x<0])/length(x))
+  out
+}
+```
+
+## Modelo jerárquico
+
+Para los modelos jerárquicos, se considerarán dos casos, y como se menciona en la sección del Análisis Exploratorio de Datos, resulta de interés considerar al género como la variable de interés de agrupamiento por las diferencias observadas. 
+
+Para la construcción de los modelos jerárquicos, sea: 
+
+$y_{i}$ la observación del individuo $i$ donde $i\in\{1,...,1242\}$. Representaremos el género del individuo $i$ mediante el subíndice $j\in\{1,2\}$ y $X_i$ representa la i-ésima covariable. 
+
+### Modelo de intercepto variable sin covariables: 
+
+El modelo sin covariables se utilizó para comparar las diferentes ligas y seleccionar a la de menor DIC para la construcción del modelo con de intercepto variable con pendientes fijas. Las ligas consideradas son: logística, probit, lognormal y cloglog.
+
+La especificación del modelo es la siguiente: 
+$$Y_i\sim Be(\pi_i), i\in\{1,...,1242\}$$
+$$\pi_i=f(\theta_j),  j\in\{1,2\} \text{ y } f(\theta_j) \text{ se define como en la sección de mlg}$$
+$$\theta_j\sim N(\phi, \lambda) \text{ con } \lambda \text{ conocida}$$
+$$\phi\sim N(\mu_0, \lambda_0) \text{ ambos parámetros conocidos}$$
+La distribución que se consideró para el hiperparámetro fue una distribución no informativa. 
+
+Para la construcción del modelo, consideraremos las cuatro ligas y se tomará aquella con el menor DIC. 
+
+|liga      | DIC  |
+|----------|------|
+|logística |1484  |
+|probit    |1485  |
+|lognormal |1484  |
+|cloglog   |1485  |
+
+A partir de la tabla anterior, se podrían consdierar dos ligas como las mejores -logística y lognormal- por ser las que menor DIC tienen. En este caso, por facilidad en la interpretación de los coeficientes, se escogerá la liga logística. 
+
+
+### Modelo con intercepto variante y pendiente fija :
+
+Con el objetivo de mejorar el modelo antes mencionado, se agregaron las siguientes variables explicativas: 
+
++ edad
+
++ número de ventas
+
++ antigüedad
+
++ número de trabajos previos
+
++ incremento
+
+Y la especifación del modelo es la siguiente: 
+
+$$Y_i\sim Be(\pi_i), i\in\{1,...,1242\}$$
+$$\pi_i=\frac{e^{\alpha_j+{X'_i}\beta}}{1+e^{\alpha_j+{X'_i}\beta}}$$
+$$\alpha_j\sim N(\phi, \lambda) \text{ con } \lambda \text{ conocida}$$
+$$\phi\sim N(\mu_0, \lambda_0) \text{ ambos parámetros conocidos}$$
+
+El DIC que se obtiene con este modelo es 603.8. En comparación con el modelo sin covariables, mejoró bastante. 
+
+A continuación se muestran los intervalos de confianza para cada una de las variables antes mencionadas: 
+
+|Variables               |media    |Desviación estándar| Límite inferior | Límite superior |
+|------------------------|---------|-------------------|-----------------|-----------------|
+| número de ventas       | -0.4269 | 0.02467           |-0.47740         | -0.37990        |
+| edad                   |-0.07566 | 0.03081           |-0.13550         |-0.015280        |
+| cant. trabajos previos | 0.08900 |0.06231            |-0.03093         | 0.213400        |
+| antiguedad             |0.0380   |0.03331            |-0.02823         |0.10480          | 
+| incremento             | -0.00893| 0.00705           |-0.02518         |0.002121         |
+
+
+
+
+Se observa que en el caso de los coeficientes $\delta1$ y $delta2$ que corresponden a las variables $antiguedad$ e $incremento$, el intervalo contiene al cero, por lo que se concluye que las variables no son significativas. 
+
+
+En la siguente tabla, se muestran los coeficientes del intercepto, $\alpha_j$ por género así como su intervalo de confianza.
+
+|Variables               |media    |Desviación estándar| Límite inferior | Límite superior |
+|------------------------|---------|-------------------|-----------------|-----------------|
+| $\alpha_1$             | 2.3354  | 0.1903            |1.9750           | 2.7200          |
+| $\alpha_2$             | 1.8746  | 0.1808            |1.5280           | 2.2350          |
+
+
+
+
+```{r, eval=FALSE, echo=FALSE}
+inits<-function(){list(a1=rnorm(2), beta=0,
+                       delta=0, epsilon=0, phi=0, delta1=0, delta2=0)}
+
+parameters_sc <- c("a1", "theta", "phi")
+
+parameters <- c("a1","beta", "delta", "epsilon", "delta1", "delta2", "phi",  "theta")     
+
+mod1.sim<- bugs(data,inits,parameters,model.file="modelo_jerarquico5.txt",
+                n.iter=20000,n.chains=2,n.burnin=1000,n.thin=1, debug=TRUE)
+```
+
+```{r, eval=TRUE, echo=FALSE}
+load("~/MCD/Otoño2019/Regresión Avanzada/modelo_final.RData")
+out.sum<-mod1.sim$summary
+out<-mod1.sim$sims.list
+```
+
+A partir de los niveles medios antes mencionados, se obtuvo la probabilidad de que el $individuo_i$ con género $j$ renuncie de manera voluntaria así como los intervalos de confianza; es decir: 
+
+$$\pi_{ij}=\frac{e^{\alpha_j}}{1+e^{\alpha_j}}$$
+```{r, eval=TRUE, echo=FALSE, warning=FALSE}
+out.sum.a<-out.sum[grep("a1",rownames(out.sum)),c(1,3,7)]
+out.sum.a <- out.sum.a[1:2, ]
+out.sum.a<-cbind(out.sum.a,apply(out$a1,2,prob))
+dimnames(out.sum.a)[[2]][4]<-"prob"
+
+a <- as.data.frame(out.sum.a)
+genero <- data.frame(genero=c("mujer", "hombre"))
+a <- cbind(a, genero)
+
+library(ggplot2)
+
+# horizontal
+ggplot(a) +
+  geom_errorbar(aes(x=genero, ymin=`2.5%`, ymax=`97.5%`), width=0.4, colour="black", alpha=0.9, size=1.3) +
+  geom_point(aes(x=genero, y=mean), stat="identity", fill="darkblue", alpha=1, size=4) +
+  labs(x="Género", y="Nivel medio, alpha_i", title="Nivel medio por género") +
+  theme_minimal() + coord_flip()
+```
+
+Y se observan las probabilidades ($\theta_i$) para los 50 primeros colaboradores con sus intervalos de confianza
+
+```{r, eval=TRUE, echo=FALSE}
+#Tabla resumen
+out.sum.t<-out.sum[grep("theta",rownames(out.sum)),c(1,3,7)]
+out.sum.t<-cbind(out.sum.t,apply(out$theta,2,prob))
+dimnames(out.sum.t)[[2]][4]<-"prob"
+#print(out.sum.t)
+
+xmin<-0
+xmax<-50
+ymin<-0
+ymax<-1
+par(mfrow=c(1,1))
+
+plot(out.sum.t[1:50,1],type="p",col="grey50", pch=16,ylim=c(ymin, ymax), xlim=c(xmin, 50), xlab="Colaboradores", ylab="Probabilidad de reuncia", main="Probabilidad de renuncia de los asesores de venta")
+
+points(out.sum.t[1:50,2],col='black',pch="-",cex=2)
+points(out.sum.t[1:50,3],col='black',pch="-",cex=2)
+segments(1:50,out.sum.t[1:50,2], 1:50, out.sum.t[1:50,3])
+
+```
