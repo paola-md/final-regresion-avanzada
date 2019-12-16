@@ -1,0 +1,17 @@
+model{
+for (i in 1:n){
+y[i]~dbern(theta[i])
+theta[i]<-exp(eta[i])/(1+exp(eta[i]))
+eta[i] <- a1[genero[i]]
+}
+
+for(j in 1:J){
+a1[j] ~ dnorm(phi, 0.001)
+}
+
+phi ~ dnorm(0, 0.001) 
+
+#Quantities of interest
+phi.i <- phi
+}
+
