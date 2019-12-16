@@ -57,15 +57,59 @@ data$f_alta <- as.Date(data$f_alta, origin="1899-12-30")
 
 #Introducción
 
-## Contexto del problema
+## Contexto
+Profuturo SA de CV es una institución financiera privada encargada de administrar los fondos de los trabajadores en México para su retiro. Dicha administración se hace a través de cuentas personales que asigna a cada trabajador, en las que se depositan las aportaciones hechas a lo largo de su vida laboral.La empresa tiene presencia a nivel nacional a través de 174 sucursales. 
 
-La rotación de empleados ... 
+Todas las Afores están reguladas por la CONSAR (https://www.gob.mx/consar), la Comisión Nacional del Sistema de Ahorro para el Retiro. Esta se encarga de:
 
-La empresa tiene presencia a nivel nacional a través de 174 sucursales. 
+    1) Vigilar que tus recursos estén seguros.
+    
+    2) Supervisar que se inviertan dentro de los parámetros y límites establecidos.
+    
+    3) Obligar a cada AFORE a una reducción anual de comisiones cobradas a cada cuenta individual.
 
-Toda vez que un nuevo colaborador entra a la empresa, recibe un curso de inducción para familiarizarse con la misión y visión de la compañía y, dependiendo del área, se les da también una capacitación. En e caso del departamento de ventas, la capacitación tiene una duración de 6 meses y los colaboradores tienen interacción con personal de otras sucursales. 
 
-En algunas ocasiones, una vez terminado el perido de capacitación, el colaborador decide dar por terminada la relación laboral y esto conlleva a un nuevo proceso de reclutamiento e inversión en capacitación. 
+Basado en el tercer punto, el organismo explicó que existen tres razones por las que las comisiones deben bajar:
+
+    1) Las comisiones afectan de manera adversa el saldo pensionario de mantenerse elevadas por mucho tiempo.
+    
+    2) Las comisiones en México continúan en un nivel por encima de la práctica internacional de administradores de fondos similares.
+    
+    3) Los saldos en el SAR seguirán creciendo de manera sostenida por al menos 15 años más por lo que las economías de escala en el Sistema permiten seguir bajando comisiones.
+
+
+Por tanto, uno de los esfuerzos que busca la AFORE consiste en reducir los gastos asociados a la administración, inversión y operación de cada cuenta, así como reducir los gastos comerciales que están asociados a adquirir nuevos clientes. Entre los gastos comerciales más relevantes:
+
+* Gastos de adquisión de cuentas: Sueldos, bonos y comisiones.
+
+* Gastos de capacitación: Eventos y dinámicas de integración.
+
+* Gastos de licencia: Gastos asociados a exámenes y cursos regulatorios.
+
+
+Particularmente, una problemática a la que se enfrenta Profuturo SA de CV, repercute en el alto costo relacionado a la adquisición de cuentas nuevas que conlleva reclutar asesores de ventas, capacitarlos así como realizar los pagos de exámenes y licencias para darse de alta frente al organismo regulador. Sin embargo, aunque la inversión es elevada muchos asesores contratados causan baja por diferentes motivos; es decir, después de que se invierte en la capacitación, cursos y exámenes deciden renunciar o abandonar la institución. 
+
+
+En resumen, toda vez que un nuevo colaborador entra a la empresa, recibe un curso de inducción para familiarizarse con la misión y visión de la compañía y, dependiendo del área, se les da también una capacitación. En e caso del departamento de ventas, la capacitación tiene una duración de 6 meses y los colaboradores tienen interacción con personal de otras sucursales. En algunas ocasiones, una vez terminado el perido de capacitación, el colaborador decide dar por terminada la relación laboral y esto conlleva a un nuevo proceso de reclutamiento e inversión en capacitación. 
+
+Con esto en mento, lo que se busca es conocer de manera anticipada aquellos individuos (asesores de venta) más probables a abandonar la institución a los 6 meses (tiempo que dura la capacitación, el período de exámenes y cursos inductivos) y generar campañas que permitan retener el talento para disminuir la tasa de rotación de personal y los gastos asociados.
+
+
+## Identificación del problema
+1)¿Cuál es el problema?
+
+    El problema radica en una elevada tasa de rotación de asesores de venta, superando una tasa del 50% de rotación anual; es decir, por cada 2 asesores contratados, 1 se va de la compañía antes de cumplir los 6 meses, tiempo que dura la capacitación.
+  
+2)¿Por qué es un problema?
+
+     La consecuencia es elevados costos de capacitación y desarrollo del equipo encargado de captación de nuevos clientes.
+
+3)¿Para quién es un problema?
+
+    Para Profuturo SA de CV, quién al tener elevados costos de capacitación y desarrollo, puede disminuir su Rentabilidad como resultado de la presión del organismo regulador (CONSAR) al reducir el cobro de comisión a los clientes que tienen una cuenta individual; es decir, se disminuirían los ingresos y se mantendrían los gastos sino se logran disminuir.
+    
+
+## Entendimiento de los datos
 
 La base de datos con la que se trabajará está conformada por `nrow(data)` asesores de ventas de la empresa y las variables se describen a continuación: 
 
@@ -109,11 +153,90 @@ De manera particular, se desarrollarán dos modelos:
 
 El trabajo se divide en XX secciones: (1) análisis exploratorio de datos en donde se da una breve explicación de las variables así como la representación gráfica de algunas de las variables y relacinoes bivariadas; en la sección *análisis inferencial* se detalla la especificación de los modelos así como los resultados de cada uno de ellos y las variables que resultaron significativas. Finalmente, se presentan las conlcusiones del proyecto. 
 
+# Preparación de los datos
+
+Como el objetivo del análisis fue conocer si las personas que contrataron efectivamente superaron el período de capacitación de 6 meses (180 días); se generó una variable target o variable objetivo con la finalidad de formar grupos de interés.
+
+    1) Grupo C: Aquellos asesores que superaron el período de capacitación de 180 días consolidandose como empleados de la compañía.
+
+    2) Grupo R: Aquellos asesores que no superaron el período de capacitación de 180 días y rotaron a otros empleos o se desemplearon.
+
+Se generó por tanto, una bandera o variable "dummy" donde se asignó el valor de 1 si pertenece al grupo R (grupo de interés por razones de rentabilidad) y el valor de 0 si pertenece al grupo C.
+
 #Análisis Exploratorio de Datos
 
-```{r, eval=FALSE, echo=FALSE}
+En este apartado, se reportó una descripción gráfica de los hallazgos encontrados durante el análisis respecto a la variable a predecir. Recordemos que estamos interesados en conocer con anticipación (a los 3 meses de contratación) aquellos asesores de venta contratados que no llegarán a los 180 días. Una parte importante será conocer si algunas variables pueden dar explicación por sí mismas a diferencias entre la variable target. 
 
-```
+Cabe recalcar, que la compañía desea conocer esta información de manera previa, para realizar campañas de retención de talento, por lo que observar de manera gráfica algunos comportamientos permitió generar hipótesis para la sección de estadística inferencial.
+
+Por tanto, resultó importante observar si existen variables que podrían ayudar a encontrar insights que den una sugerencia discriminante acerca de la variable target (si el asesor rota o no). En muchas ocasiones está variable es notoria en cada asesor; sin embargo, para efectos de escalabilidad se otorgó evidencia gráfica y numérica de lo encontrado.
+
+Resulta entonces inmedianto conocer la distibución de asesores que abandonaron el empleo del conjunto de información histórica con la que se realizó el estudio. Dicha distribución pretende dar un panorama global de los 
+
+
+En el gráfico 1 debajo se muestra información de la distribución de la variable targetdesc, que no es más que una descripción de la variable target para cada uno de los 1242 asesores de estudio. De acuerdo a nuestra variable de interés, se clasifican en los siguientes grupos:
+
+    1) Grupo R: Asesores que rotaron antes de los 6 meses o 180 días, que representan el 71 % del total de asesores.
+    
+    2) Grupo C: Asesores que lograron consolidarse después de los 6 meses o 180 días, que representaron el 29% del total de asesores.
+    
+    
+La variable target entonces, estará distribuida de la siguiente forma: Grupo R con un 71% y Grupo C con un 29% del total.
+
+![Target](./../img/targetdesc.png)
+
+Con base en lo anterior, los hallazgos se centraron en encontrar diferencias gráficas (visuales) que puedan ayudar a distinguir entre asesores del grupo R (< 180 días) vs asesores del grupo C (>= 180). 
+
+
+No obstante, de inicio y conociendo la distribución anterior, se esparaba que cada variable seleccionada tenga más asesores dentro del grupo R que del grupo C; por lo que los hallazgos se centraron en romper este patrón de inicio.
+
+
+En el siguiente gráfico 2 se observa la escolaridad del asesor de ventas de acuerdo a cada grupo de interés siendo:
+
+
+Escolaridad 1: Asesores con prepa técnica o bachilletaro.
+
+
+Escolaridad 2: Asesores con Licenciatura concluida.
+
+
+Escolaridad 3: Asesores con Maestría.
+
+
+Sin embargo, prevalecen las condiciones iniciales, para cada grupo existen más asesores del grupo R que del grupo C como se observa a continuación:
+
+![Escolaridad](./../img/escolaridad.png)
+
+Otra de las variables con las que se intentó observar diferencias y cambiar el tipo de patrones diferentes a la distribución original de los grupos fue la variable "edad" que da información acerca de la edad de en el momento de contratación del asesor en la compañía.
+
+Lo que se observa en el gráfico 3 muestra ligeras diferencias entre los grupos R y C en la medida que cambian de edad; es decir, más personas del grupo R (< 180) se concentran en edades tempranas; sin embargo el comportamiento se lograr nivelar a medida de que las edades incrementan, mostrándose un cambio en la frecuencia (por ejemplo, en edades:44 y 45) siendo mayores los del grupo C (>=180).
+
+![Edad](./../img/edad.png)
+
+Por lo anterior, resultó importante estudiar las edades a fondo, en esta ocasión se comparó con el número de ventas realizadas para conocer el impacto de las ventas respecto al incremento de edad.
+
+Lo que se observa en la Figura 4 muestra evidencia de que existe una tendencia clara, de que a partir de los 31 años en adelante (exceptuando los 21 años) los asesores logran llegar a más de 10 ventas en sus primeros 3 meses en la compañía con más facilidad; no obstante, aún hay quienes no logran superar esta barrera, pero se rescató la relevancia e impacto que tienen las ventas en la decisión de rotar o permenecer en un área de ventas, lo cuál parece que tiene mucho sentido. Por tanto, se compararán en los aiguientes gráficos el número de ventas para poder observar más hallazgos.
+
+![Edad_Ventas](./../img/edad_ventas.png)
+
+En consecuencia, se decidió observar el comportamiento de las ventas de acuerdo a la experiencia en años del asesor, aunado a que si las ventas dan un indicio de que un asesor pueda rotar o no, alguien con experiencia puede tener más facilidades de convencimiento en ventas que una persona sin experiencia.
+
+En el gráfico 5 se observa este comparativo mostrándo algunos asesores con un mejor número de ventas en la medida que su experiencia en ventas es de más tiempo. Posiblemente a la compañía le convenga establecer un límite de experiencia en años en el momento de la contratación para disminuir la tasa de rotación.
+
+![Experiencia](./../img/experiencia_ventas.png)
+
+Finalmente, se observa una diferencia contundente en el gráfico 6 donde se muestra que el número de ventas tiene un impacto en la rotación de asesores. Es decir, el grupo que se consolida promedia ventas superiores a 10, mientras que los asesores que rotan promedian por debajo de las 10 ventas en sus primeros 3 meses. Lo relevante para la compañía será poder llevar acciones concretas para lograr que los asesores hagan más de 10 ventas en sus primeros 3 meses.
+
+![TargetVentas](./../img/target_ventas.png)
+
+Por otro lado, a la compañía le interesó conocer las distribución por genero para cada grupo de asesores , lo cuál se muestra en la Figura 7. Lo relevante es que muestra una diferencia entre hombre y mujeres en la tasa de rotación, ya que se observa que los hombres tienen menores niveles de rotación que las mujeres. No obstante, se validará si realmente existe una diferencia más adelante con un modelo jerárquico por género, y también se especificarán las implicaciones éticas de generar este tipo de categorías.
+
+![Genero](./../img/genero_prop.png)
+
+Adicionalmente se calculó una matriz de correlaciones lineales para variables "NUMÉRICAS" y tener mejores insights de cuáles pueden ser útiles en la modelación y predicción de asesores que rotan de la compañía. La matriz de correlación se muestra en el gráfico 7:
+
+![corr](./../img/corr.png)
+
 
 #Análisis inferencial 
 
